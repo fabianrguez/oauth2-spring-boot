@@ -1,5 +1,7 @@
 package com.fabian.security.oauth2.security;
 
+import com.fabian.security.oauth2.models.Role;
+import com.fabian.security.oauth2.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -7,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -47,11 +50,20 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
 				.inMemory()
 					.withClient("trusted-app")
 						.authorizedGrantTypes("client_credentials", "password", "refresh_token")
-						.authorities("ROLE_TRUSTED_CLIENT")
+						.authorities(Role.ROLE_TRUSTED_CLIENT.toString())
 						.scopes("read", "write")
 						.resourceIds(RESOURCE_ID)
 						.accessTokenValiditySeconds(ACCESS_TOKEN_VALIDITY_SECONDS)
 						.refreshTokenValiditySeconds(REFRESH_TOKEN_VALIDITY_SECONDS)
+						.secret("{noop}secret")
+				.and()
+					.withClient("register-app")
+						.authorizedGrantTypes("client_credentials")
+						.authorities(Role.ROLE_REGISTER.toString())
+						.scopes("register")
+						.accessTokenValiditySeconds(10)
+						.refreshTokenValiditySeconds(10)
+						.resourceIds(RESOURCE_ID)
 						.secret("secret");
 	}
 
@@ -86,5 +98,10 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
 		defaultTokenServices.setSupportRefreshToken(true);
 		defaultTokenServices.setTokenEnhancer(accessTokenConverter());
 		return defaultTokenServices;
+	}
+
+	@Bean
+	public UserDetailsService userDetailsService() {
+		return new AccountService();
 	}
 }

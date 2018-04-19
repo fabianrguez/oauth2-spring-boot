@@ -1,13 +1,30 @@
 package com.fabian.security.oauth2.controllers;
 
+import com.fabian.security.oauth2.models.Account;
+import com.fabian.security.oauth2.services.AccountService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.util.List;
 
 @RestController
 public class GeneralController {
+
+	@Autowired
+	private AccountService accountService;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@GetMapping("/getUser")
+	public void user() {
+		List<Account> accounts = accountService.findAll();
+		System.out.println(accounts.get(0));
+	}
 
 	@GetMapping("/")
 	public RestMessage hello() {
