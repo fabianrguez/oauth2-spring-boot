@@ -2,6 +2,8 @@ package com.fabian.security.oauth2.security;
 
 import com.fabian.security.oauth2.models.Role;
 import com.fabian.security.oauth2.services.AccountService;
+import com.fabian.security.oauth2.services.TokenBlackListService;
+import com.fabian.security.oauth2.services.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -26,16 +28,19 @@ import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFacto
 public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
 
 	@Value("${security.oauth2.client.access-token-validity-seconds}")
-	private static int ACCESS_TOKEN_VALIDITY_SECONDS;
+	private int ACCESS_TOKEN_VALIDITY_SECONDS;
 
 	@Value("${security.oauth2.client.refresh-token-validity-seconds}")
-	private static int REFRESH_TOKEN_VALIDITY_SECONDS;
+	private int REFRESH_TOKEN_VALIDITY_SECONDS;
 
 	@Value("${security.oauth2.resource.id}")
-	private static String RESOURCE_ID;
+	private String RESOURCE_ID;
 
 	@Autowired
 	private AuthenticationManager authenticationManager;
+
+	@Autowired
+	private TokenBlackListService tokenBlackListService;
 
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) {
@@ -46,6 +51,7 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
 
 	@Override
 	public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
+		System.out.println(ACCESS_TOKEN_VALIDITY_SECONDS);
 		clients
 				.inMemory()
 					.withClient("trusted-app")
@@ -93,15 +99,16 @@ public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter {
 	@Bean
 	@Primary
 	public DefaultTokenServices tokenServices() {
-		DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-		defaultTokenServices.setTokenStore(tokenStore());
-		defaultTokenServices.setSupportRefreshToken(true);
-		defaultTokenServices.setTokenEnhancer(accessTokenConverter());
-		return defaultTokenServices;
+		TokenService tokenService = new TokenService(tokenBlackListService);
+		tokenService.setTokenStore(tokenStore());
+		tokenService.setSupportRefreshToken(true);
+		tokenService.setTokenEnhancer(accessTokenConverter());
+		return tokenService;
 	}
 
 	@Bean
 	public UserDetailsService userDetailsService() {
 		return new AccountService();
 	}
+
 }

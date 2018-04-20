@@ -3,7 +3,7 @@ security:
     resource:
       id: oauth2_id
     client:
-      access-token-validity-seconds: 10000
+      access-token-validity-seconds: 10
       refresh-token-validity-seconds: 30000
 spring:
   jpa:
